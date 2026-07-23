@@ -112,3 +112,8 @@ InitTestScene*.unity*
 Thumbs.db
 desktop.ini
 $RECYCLE.BIN/
+
+# Vlastní ignorovaná pravidla pro tento projekt
+Assets/_Recovery/
+Assets/_Recovery.meta
+Assets/TextMesh Pro/Examples & Extras/
