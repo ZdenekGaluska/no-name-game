@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 public class PlayerHealthScript : MonoBehaviour
 {
@@ -6,15 +7,27 @@ public class PlayerHealthScript : MonoBehaviour
     private int _currentHealth;
     public float regenerationRate = 3f;
     private float _currentTimeToReg = 0f;
-    
+
     private bool _isAlive = true;
     public bool IsAlive => _isAlive;
 
-    private bool _isInvincible = false;
-    private float _invincibleTimer = 0f;
-    public float invincibleDuration = 0.5f;
+    [SerializeField] private float enemyInvincibleDuration = 0.5f;
+    [SerializeField] private float hazardInvincibleDuration = 1f;
+
+    public enum DamageSourceType
+    {
+        Enemy,
+        Hazard
+    }
+
+    private Dictionary<DamageSourceType, float> _invincibleTimers = new Dictionary<DamageSourceType, float>()
+    {
+        { DamageSourceType.Enemy, 0f },
+        { DamageSourceType.Hazard, 0f }
+    };
 
     public HealthUiScript healthUIScript;
+    
     void Start()
     {
         healthUIScript.UpdateText(health, health);
@@ -36,20 +49,30 @@ public class PlayerHealthScript : MonoBehaviour
         }
     }
 
-    void TakeDamage()
+    void TakeDamage(DamageSourceType source)
     {
-        if (_isInvincible || !_isAlive) return;
+        if (!_isAlive || Time.time < _invincibleTimers[source]) return;
         
         Debug.Log("Current health: " + _currentHealth);
+        
         _currentHealth -= 1;
         _currentTimeToReg = 0f;
-        _isInvincible = true;
-        _invincibleTimer = 0f;
+        
         healthUIScript.UpdateText(_currentHealth, health);
-
         if (_currentHealth <= 0)
         {
             _isAlive = false;
+        }
+
+        if (source == DamageSourceType.Enemy)
+        {
+            _invincibleTimers[DamageSourceType.Enemy] = Time.time + enemyInvincibleDuration;
+            _invincibleTimers[DamageSourceType.Hazard] = Time.time + enemyInvincibleDuration;
+        }
+        else if (source == DamageSourceType.Hazard)
+        {
+            _invincibleTimers[DamageSourceType.Enemy] = Time.time + enemyInvincibleDuration;
+            _invincibleTimers[DamageSourceType.Hazard] = Time.time + hazardInvincibleDuration;
         }
         
     }
@@ -57,22 +80,25 @@ public class PlayerHealthScript : MonoBehaviour
     void FixedUpdate()
     {
         HealthRegen();
-
-        if (_isInvincible)
-        {
-            _invincibleTimer += Time.fixedDeltaTime;
-            if (_invincibleTimer >= invincibleDuration)
-            {
-                _isInvincible = false;
-            }
-        }
     }
 
     void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.CompareTag("Enemy"))
         {
-            TakeDamage();
+            TakeDamage(DamageSourceType.Enemy);
+        }
+        else if (collision.CompareTag("Hazard"))
+        {
+            TakeDamage(DamageSourceType.Hazard);
+        }
+    }
+
+    void OnTriggerStay2D(Collider2D collision)
+    {
+        if (collision.CompareTag("Hazard") )
+        {
+            TakeDamage(DamageSourceType.Hazard);
         }
     }
 }

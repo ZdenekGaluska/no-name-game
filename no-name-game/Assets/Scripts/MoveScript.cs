@@ -7,6 +7,7 @@ public class MoveScript : MonoBehaviour
     public float speed = 2f;
     private PlayerHealthScript _playerHealthScript;
     public ArenaBoundaryScript ArenaBoundaryScript;
+    
 
     public enum MovementState
     {
@@ -14,7 +15,7 @@ public class MoveScript : MonoBehaviour
         Dashing,
         Hooking
     }
-
+    
     private MovementState state =  MovementState.Classic;
     
     public float DashStaminaCost = 10f;
